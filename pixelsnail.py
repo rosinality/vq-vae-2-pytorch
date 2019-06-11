@@ -383,6 +383,7 @@ class PixelSNAIL(nn.Module):
             condition = F.one_hot(condition, self.n_class).permute(0, 3, 1, 2).float()
             condition = self.cond_resnet(condition)
             condition = F.interpolate(condition, scale_factor=2)
+            condition = condition[:, :, :height, :]
 
         for block in self.blocks:
             out = block(out, background, condition=condition)
