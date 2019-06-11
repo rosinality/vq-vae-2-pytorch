@@ -26,3 +26,11 @@ If you use FFHQ, I highly recommends to preprocess images. (resize and convert t
 > python train_pixelsnail.py [LMDB NAME]
 
 Maybe it is better to use larger PixelSNAIL model. Currently model size is reduced due to GPU constraints.
+
+## Sample
+
+### Stage 1
+
+Note: This is a training sample
+
+![Sample from Stage 1 (VQ-VAE)](stage1_sample.png)
