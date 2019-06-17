@@ -174,8 +174,13 @@ class GatedResBlock(nn.Module):
 def causal_mask(size):
     shape = [size, size]
     mask = np.triu(np.ones(shape), k=1).astype(np.uint8).T
+    start_mask = np.ones(size).astype(np.float32)
+    start_mask[0] = 0
 
-    return torch.from_numpy(mask).unsqueeze(0)
+    return (
+        torch.from_numpy(mask).unsqueeze(0),
+        torch.from_numpy(start_mask).unsqueeze(1),
+    )
 
 
 class CausalAttention(nn.Module):
@@ -204,9 +209,11 @@ class CausalAttention(nn.Module):
         value = reshape(self.value(key_flat))
 
         attn = torch.matmul(query, key) / sqrt(self.dim_head)
-        mask = causal_mask(height * width).type_as(query)
+        mask, start_mask = causal_mask(height * width)
+        mask = mask.type_as(query)
+        start_mask = start_mask.type_as(query)
         attn = attn.masked_fill(mask == 0, -1e9)
-        attn = torch.softmax(attn, 3)
+        attn = torch.softmax(attn, 3) * start_mask
         attn = self.dropout(attn)
 
         out = attn @ value
