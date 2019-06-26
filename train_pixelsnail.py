@@ -67,7 +67,14 @@ if __name__ == '__main__':
     parser.add_argument('--epoch', type=int, default=420)
     parser.add_argument('--hier', type=str, default='top')
     parser.add_argument('--lr', type=float, default=3e-4)
+    parser.add_argument('--channel', type=int, default=256)
+    parser.add_argument('--n_res_block', type=int, default=4)
+    parser.add_argument('--n_res_channel', type=int, default=256)
+    parser.add_argument('--n_out_res_block', type=int, default=0)
+    parser.add_argument('--n_cond_res_block', type=int, default=3)
+    parser.add_argument('--dropout', type=float, default=0.1)
     parser.add_argument('--sched', type=str)
+    parser.add_argument('--ckpt', type=str)
     parser.add_argument('path', type=str)
 
     args = parser.parse_args()
@@ -78,23 +85,43 @@ if __name__ == '__main__':
 
     dataset = LMDBDataset(args.path)
     loader = DataLoader(dataset, batch_size=args.batch, shuffle=True, num_workers=4)
+    
+    ckpt = {}
+    
+    if args.ckpt is not None:
+        ckpt = torch.load(args.ckpt)
+        args = ckpt['args']
 
     if args.hier == 'top':
-        model = PixelSNAIL([32, 32], 512, 256, 5, 4, 4, 256)
+        model = PixelSNAIL(
+            [32, 32],
+            512,
+            args.channel,
+            5,
+            4,
+            args.n_res_block,
+            args.n_res_channel,
+            dropout=args.dropout,
+            n_out_res_block=args.n_out_res_block,
+        )
 
     elif args.hier == 'bottom':
         model = PixelSNAIL(
             [64, 64],
             512,
-            256,
+            args.channel,
             5,
-            3,
             4,
-            256,
+            args.n_res_block,
+            args.n_res_channel,
             attention=False,
-            n_cond_res_block=3,
-            cond_res_channel=256,
+            dropout=args.dropout,
+            n_cond_res_block=args.n_cond_res_block,
+            cond_res_channel=args.n_res_channel,
         )
+        
+    if 'model' in ckpt:
+        model.load_state_dict(ckpt['model'])
 
     model = nn.DataParallel(model)
     model = model.to(device)
@@ -109,6 +136,6 @@ if __name__ == '__main__':
     for i in range(args.epoch):
         train(args, i, loader, model, optimizer, scheduler, device)
         torch.save(
-            model.module.state_dict(),
+            {'model': model.module.state_dict(), 'args': args},
             f'checkpoint/pixelsnail_{args.hier}_{str(i + 1).zfill(3)}.pt',
         )
