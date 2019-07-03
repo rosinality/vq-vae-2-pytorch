@@ -23,12 +23,12 @@ def train(args, epoch, loader, model, optimizer, scheduler, device):
 
         if args.hier == 'top':
             target = top
-            out = model(top)
+            out, _ = model(top)
 
         elif args.hier == 'bottom':
             bottom = bottom.to(device)
             target = bottom
-            out = model(bottom, condition=top)
+            out, _ = model(bottom, condition=top)
 
         loss = criterion(out, target)
         loss.backward()
@@ -85,9 +85,9 @@ if __name__ == '__main__':
 
     dataset = LMDBDataset(args.path)
     loader = DataLoader(dataset, batch_size=args.batch, shuffle=True, num_workers=4)
-    
+
     ckpt = {}
-    
+
     if args.ckpt is not None:
         ckpt = torch.load(args.ckpt)
         args = ckpt['args']
@@ -119,7 +119,7 @@ if __name__ == '__main__':
             n_cond_res_block=args.n_cond_res_block,
             cond_res_channel=args.n_res_channel,
         )
-        
+
     if 'model' in ckpt:
         model.load_state_dict(ckpt['model'])
 
