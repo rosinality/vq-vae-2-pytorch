@@ -30,7 +30,8 @@ def train(epoch, loader, model, optimizer, scheduler, device):
 
         out, latent_loss = model(img)
         recon_loss = criterion(out, img)
-        loss = recon_loss + latent_loss_weight * latent_loss.mean()
+        latent_loss = latent_loss.mean()
+        loss = recon_loss + latent_loss_weight * latent_loss
         loss.backward()
 
         if scheduler is not None:
@@ -95,7 +96,7 @@ if __name__ == '__main__':
     dataset = datasets.ImageFolder(args.path, transform=transform)
     loader = DataLoader(dataset, batch_size=128, shuffle=True, num_workers=4)
 
-    model = VQVAE().to(device)
+    model = nn.DataParallel(VQVAE()).to(device)
 
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
     scheduler = None
@@ -106,4 +107,6 @@ if __name__ == '__main__':
 
     for i in range(args.epoch):
         train(i, loader, model, optimizer, scheduler, device)
-        torch.save(model.state_dict(), f'checkpoint/vqvae_{str(i + 1).zfill(3)}.pt')
+        torch.save(
+            model.module.state_dict(), f'checkpoint/vqvae_{str(i + 1).zfill(3)}.pt'
+        )

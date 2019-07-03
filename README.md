@@ -4,7 +4,7 @@ Implementation of Generating Diverse High-Fidelity Images with VQ-VAE-2 in PyTor
 ## Requisite
 
 * Python >= 3.6
-* PyTorch
+* PyTorch >= 1.1
 * lmdb (for storing extracted codes)
 
 ## Usage

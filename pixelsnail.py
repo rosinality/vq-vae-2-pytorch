@@ -41,12 +41,12 @@ class WNConv2d(nn.Module):
                 bias=bias,
             )
         )
-        
+
         self.out_channel = out_channel
-        
+
         if isinstance(kernel_size, int):
             kernel_size = [kernel_size, kernel_size]
-    
+
         self.kernel_size = kernel_size
 
         self.activation = activation
@@ -82,7 +82,7 @@ class CausalConv2d(nn.Module):
 
         if isinstance(kernel_size, int):
             kernel_size = [kernel_size] * 2
-            
+
         self.kernel_size = kernel_size
 
         if padding == 'downright':
@@ -151,7 +151,7 @@ class GatedResBlock(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
         self.conv2 = conv_module(channel, in_channel * 2, kernel_size)
-        
+
         if condition_dim > 0:
             # self.condition = nn.Linear(condition_dim, in_channel * 2, bias=False)
             self.condition = WNConv2d(condition_dim, in_channel * 2, 1, bias=False)
@@ -411,7 +411,7 @@ class PixelSNAIL(nn.Module):
             if 'condition' in cache:
                 condition = cache['condition']
                 condition = condition[:, :, :height, :]
-                
+
             else:
                 condition = (
                     F.one_hot(condition, self.n_class)
