@@ -6,6 +6,12 @@ from torch import nn, optim
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
+try:
+    from apex import amp
+
+except ImportError:
+    amp = None
+
 from dataset import LMDBDataset
 from pixelsnail import PixelSNAIL
 from scheduler import CycleScheduler
@@ -73,6 +79,7 @@ if __name__ == '__main__':
     parser.add_argument('--n_out_res_block', type=int, default=0)
     parser.add_argument('--n_cond_res_block', type=int, default=3)
     parser.add_argument('--dropout', type=float, default=0.1)
+    parser.add_argument('--amp', type=str, default='O0')
     parser.add_argument('--sched', type=str)
     parser.add_argument('--ckpt', type=str)
     parser.add_argument('path', type=str)
@@ -125,10 +132,15 @@ if __name__ == '__main__':
     if 'model' in ckpt:
         model.load_state_dict(ckpt['model'])
 
+    model = model.to(device)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+
+    if amp is not None:
+        model, optimizer = amp.initialize(model, optimizer, opt_level=args.amp)
+
     model = nn.DataParallel(model)
     model = model.to(device)
 
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
     scheduler = None
     if args.sched == 'cycle':
         scheduler = CycleScheduler(
