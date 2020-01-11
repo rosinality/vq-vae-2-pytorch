@@ -18,7 +18,7 @@ def train(epoch, loader, model, optimizer, device):
 
         img = img.to(device)
 
-        out = model(img)
+        out, _ = model(img)
         loss = criterion(out, img)
         loss.backward()
 
