@@ -7,6 +7,8 @@ Implementation of Generating Diverse High-Fidelity Images with VQ-VAE-2 in PyTor
 * PyTorch >= 1.1
 * lmdb (for storing extracted codes)
 
+[Checkpoint of VQ-VAE pretrained on FFHQ](vqvae_560.pt)
+
 ## Usage
 
 Currently supports 256px (top/bottom hierarchical prior)
