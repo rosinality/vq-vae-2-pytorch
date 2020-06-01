@@ -1,6 +1,12 @@
 # vq-vae-2-pytorch
 Implementation of Generating Diverse High-Fidelity Images with VQ-VAE-2 in PyTorch
 
+## Update
+
+* 2020-06-01
+
+train_vqvae.py and vqvae.py now supports distributed training. You can use --n_gpu [NUM_GPUS] arguments for train_vqvae.py to use [NUM_GPUS] during training.
+
 ## Requisite
 
 * Python >= 3.6
