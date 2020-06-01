@@ -2,6 +2,8 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 
+import distributed as dist_fn
+
 
 # Copyright 2018 The Sonnet Authors. All Rights Reserved.
 #
@@ -32,9 +34,9 @@ class Quantize(nn.Module):
         self.eps = eps
 
         embed = torch.randn(dim, n_embed)
-        self.register_buffer('embed', embed)
-        self.register_buffer('cluster_size', torch.zeros(n_embed))
-        self.register_buffer('embed_avg', embed.clone())
+        self.register_buffer("embed", embed)
+        self.register_buffer("cluster_size", torch.zeros(n_embed))
+        self.register_buffer("embed_avg", embed.clone())
 
     def forward(self, input):
         flatten = input.reshape(-1, self.dim)
@@ -49,11 +51,16 @@ class Quantize(nn.Module):
         quantize = self.embed_code(embed_ind)
 
         if self.training:
-            self.cluster_size.data.mul_(self.decay).add_(
-                1 - self.decay, embed_onehot.sum(0)
-            )
+            embed_onehot_sum = embed_onehot.sum(0)
             embed_sum = flatten.transpose(0, 1) @ embed_onehot
-            self.embed_avg.data.mul_(self.decay).add_(1 - self.decay, embed_sum)
+
+            dist_fn.all_reduce(embed_onehot_sum)
+            dist_fn.all_reduce(embed_sum)
+
+            self.cluster_size.data.mul_(self.decay).add_(
+                embed_onehot_sum, alpha=1 - self.decay
+            )
+            self.embed_avg.data.mul_(self.decay).add_(embed_sum, alpha=1 - self.decay)
             n = self.cluster_size.sum()
             cluster_size = (
                 (self.cluster_size + self.eps) / (n + self.n_embed * self.eps) * n
