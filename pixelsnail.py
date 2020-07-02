@@ -142,7 +142,7 @@ class GatedResBlock(nn.Module):
         elif conv == 'causal':
             conv_module = partial(CausalConv2d, padding='causal')
 
-        self.activation = activation(inplace=True)
+        self.activation = activation()
         self.conv1 = conv_module(in_channel, channel, kernel_size)
 
         if auxiliary_channel > 0:
