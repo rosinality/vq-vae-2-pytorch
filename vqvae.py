@@ -35,7 +35,7 @@ class Quantize(nn.Module):
 
         embed = torch.randn(dim, n_embed)
         self.register_buffer("embed", embed)
-        self.register_buffer("cluster_size", torch.zeros(n_embed))
+        self.register_buffer("cluster_size", torch.ones(n_embed))
         self.register_buffer("embed_avg", embed.clone())
 
     def forward(self, input):
